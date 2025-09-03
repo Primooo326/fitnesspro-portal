@@ -1,20 +1,18 @@
 import { db, nombreProyecto } from '@/lib/firebase';
-import { collection, addDoc, getDocs } from 'firebase/firestore';
+import { collection, addDoc, getDocs, query, where } from 'firebase/firestore';
 import { NextResponse } from 'next/server';
 
-// TODO: Replace with actual authenticated user's conjuntoId
-const conjuntoId = "HARDCODED_CONJUNTO_ID";
-
 export async function POST(request: Request) {
-  const { nombre } = await request.json();
+  const { nombre, conjuntoId, aforo } = await request.json();
 
-  if (!nombre) {
+  if (!nombre || !conjuntoId || aforo === undefined) {
     return NextResponse.json({ error: "Faltan campos requeridos" }, { status: 400 });
   }
 
   try {
-    const docRef = await addDoc(collection(db, `${nombreProyecto}/conjuntos`, conjuntoId, "zonas"), {
+    const docRef = await addDoc(collection(db, `conjuntos/${conjuntoId}/zonas`), {
       nombre,
+      aforo,
     });
     return NextResponse.json({ message: "Zona creada exitosamente", id: docRef.id }, { status: 201 });
   } catch (error) {
@@ -23,8 +21,16 @@ export async function POST(request: Request) {
 }
 
 export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const conjuntoId = searchParams.get('conjuntoId');
+
+  if (!conjuntoId) {
+    return NextResponse.json({ error: "conjuntoId es requerido" }, { status: 400 });
+  }
+
   try {
-    const querySnapshot = await getDocs(collection(db, `${nombreProyecto}/conjuntos`, conjuntoId, "zonas"));
+    const q = query(collection(db, `conjuntos/${conjuntoId}/zonas`));
+    const querySnapshot = await getDocs(q);
     const zonas = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     return NextResponse.json(zonas, { status: 200 });
   } catch (error) {

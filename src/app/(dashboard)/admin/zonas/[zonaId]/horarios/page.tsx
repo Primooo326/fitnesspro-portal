@@ -2,21 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-
-interface Horario {
-  id: string;
-  dia: string;
-  horaInicio: string;
-  horaFin: string;
-  aforo: number;
-}
-
-export default function HorariosPage() {
-  const [horarios, setHorarios] = useState<Horario[]>([]);
-  'use client';
-
-import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
 import ScheduleForm from '@/components/admin/ScheduleForm';
 
 interface Horario {

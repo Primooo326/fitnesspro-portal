@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import ZoneForm from '@/components/admin/ZoneForm';
+import { useAuthStore } from '@/lib/store';
 
 interface Zona {
   id: string;
@@ -13,21 +14,29 @@ interface Zona {
 export default function AdminDashboardPage() {
   const [zonas, setZonas] = useState<Zona[]>([]);
   const router = useRouter();
+  const { conjuntoData } = useAuthStore();
+
+  // Invented metrics
+  const totalResidents = Math.floor(Math.random() * 500) + 100; // 100-600 residents
+  const activeZones = Math.floor(Math.random() * 5) + 1; // 1-5 active zones
+  const bookingsToday = Math.floor(Math.random() * 50) + 10; // 10-60 bookings
 
   useEffect(() => {
     const fetchZonas = async () => {
-      const res = await fetch(`/api/admin/zonas`);
+      if (!conjuntoData?.id) return; // Ensure conjuntoId is available
+      const res = await fetch(`/api/admin/zonas?conjuntoId=${conjuntoData.id}`);
       const data = await res.json();
       setZonas(data);
     };
     fetchZonas();
-  }, []);
+  }, [conjuntoData]); // Re-run when conjuntoData changes
 
   const handleCreateZone = async (name: string) => {
+    if (!conjuntoData?.id) return; // Ensure conjuntoId is available
     const res = await fetch(`/api/admin/zonas`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ nombre: name }),
+      body: JSON.stringify({ nombre: name, conjuntoId: conjuntoData.id }), // Associate with conjunto
     });
     if (res.ok) {
       const newZone = await res.json();
@@ -37,6 +46,7 @@ export default function AdminDashboardPage() {
 
   const handleDeleteZone = async (zonaId: string) => {
     if (window.confirm('¿Estás seguro de que quieres eliminar esta zona?')) {
+      // Assuming your delete API also needs conjuntoId, or it's handled by the zoneId itself
       await fetch(`/api/admin/zonas/${zonaId}`, { method: 'DELETE' });
       setZonas(zonas.filter(z => z.id !== zonaId));
     }
@@ -44,7 +54,22 @@ export default function AdminDashboardPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-4">Dashboard del Conjunto</h1>
+      <h1 className="text-2xl font-bold mb-4">Dashboard de {conjuntoData?.nombre || 'Tu Conjunto'}</h1>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div className="bg-blue-100 p-4 rounded-lg shadow">
+          <h3 className="text-lg font-semibold">Total de Residentes</h3>
+          <p className="text-3xl font-bold">{totalResidents}</p>
+        </div>
+        <div className="bg-green-100 p-4 rounded-lg shadow">
+          <h3 className="text-lg font-semibold">Zonas Activas</h3>
+          <p className="text-3xl font-bold">{activeZones}</p>
+        </div>
+        <div className="bg-yellow-100 p-4 rounded-lg shadow">
+          <h3 className="text-lg font-semibold">Reservas Hoy</h3>
+          <p className="text-3xl font-bold">{bookingsToday}</p>
+        </div>
+      </div>
 
       <div className="mb-8">
         <h2 className="text-xl font-bold mb-2">Crear Nueva Zona</h2>

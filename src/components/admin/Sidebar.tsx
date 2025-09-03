@@ -10,12 +10,11 @@ export default function Sidebar() {
           <li className="mb-2">
             <Link href="/admin/dashboard" className="block hover:bg-gray-600 p-2 rounded">Dashboard</Link>
           </li>
-          {/* Add more navigation links here */}
           <li className="mb-2">
-            <Link href="/superadmin/trainers" className="block hover:bg-gray-600 p-2 rounded">Entrenadores</Link>
+            <Link href="/admin/zonas" className="block hover:bg-gray-600 p-2 rounded">Zonas</Link>
           </li>
           <li className="mb-2">
-            <Link href="/superadmin/users" className="block hover:bg-gray-600 p-2 rounded">Usuarios</Link>
+            <Link href="/admin/users" className="block hover:bg-gray-600 p-2 rounded">Residentes</Link>
           </li>
         </ul>
       </nav>
