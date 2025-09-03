@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/firebase';
+import { db, nombreProyecto } from '@/lib/firebase';
 import { doc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 
 // GET: Obtener un conjunto específico por ID
 export async function GET(request: Request, { params }: { params: { id: string } }) {
   try {
     const { id } = params;
-    const docRef = doc(db, 'conjuntos', id);
+    const docRef = doc(db, `${nombreProyecto}/conjuntos`, id);
     const docSnap = await getDoc(docRef);
 
     if (!docSnap.exists()) {
@@ -31,7 +31,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
       return NextResponse.json({ error: 'Faltan campos requeridos' }, { status: 400 });
     }
 
-    const docRef = doc(db, 'conjuntos', id);
+    const docRef = doc(db, `${nombreProyecto}/conjuntos`, id);
     await updateDoc(docRef, {
       nombre: nombreConjunto,
       direccion: direccion,
@@ -49,12 +49,12 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 export async function DELETE(request: Request, { params }: { params: { id: string } }) {
   try {
     const { id } = params;
-    
+
     // TODO: Implementar una lógica más robusta con Firebase Admin SDK.
     // Esta implementación simplificada no elimina el usuario de Firebase Auth,
     // solo los documentos de Firestore.
 
-    const conjuntoRef = doc(db, 'conjuntos', id);
+    const conjuntoRef = doc(db, `${nombreProyecto}/conjuntos`, id);
     const conjuntoSnap = await getDoc(conjuntoRef);
 
     if (!conjuntoSnap.exists()) {

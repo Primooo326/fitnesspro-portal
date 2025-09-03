@@ -1,4 +1,4 @@
-import { db } from '@/lib/firebase';
+import { db, nombreProyecto } from '@/lib/firebase';
 import { collection, addDoc, getDocs } from 'firebase/firestore';
 import { NextResponse } from 'next/server';
 
@@ -10,7 +10,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const docRef = await addDoc(collection(db, "pqrs"), {
+    const docRef = await addDoc(collection(db, `${nombreProyecto}/pqrs`), {
       userId,
       type,
       description,
@@ -24,7 +24,7 @@ export async function POST(request: Request) {
 
 export async function GET() {
   try {
-    const querySnapshot = await getDocs(collection(db, "pqrs"));
+    const querySnapshot = await getDocs(collection(db, `${nombreProyecto}/pqrs`));
     const pqrs = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     return NextResponse.json(pqrs, { status: 200 });
   } catch (error) {

@@ -1,11 +1,11 @@
-import { db } from '@/lib/firebase';
+import { db, nombreProyecto } from '@/lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import { NextResponse } from 'next/server';
 
 export async function GET(request: Request, { params }: { params: { id: string } }) {
   const { id } = params;
   try {
-    const docRef = doc(db, "schedules", id);
+    const docRef = doc(db, `${nombreProyecto}/schedules`, id);
     const docSnap = await getDoc(docRef);
 
     if (!docSnap.exists()) {

@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
-import { db, auth } from '@/lib/firebase';
+import { db, auth, nombreProyecto } from '@/lib/firebase';
 import { collection, getDocs, addDoc, doc, setDoc, updateDoc } from 'firebase/firestore';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 
 // GET: Obtener todos los conjuntos
 export async function GET(request: Request) {
   try {
-    const querySnapshot = await getDocs(collection(db, 'conjuntos'));
+    const querySnapshot = await getDocs(collection(db, `${nombreProyecto}/conjuntos`));
     const conjuntos = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     return NextResponse.json(conjuntos, { status: 200 });
   } catch (error) {
@@ -56,7 +56,7 @@ export async function POST(request: Request) {
       administradorId: adminUid, // Enlazamos con el UID del admin
       fechaCreacion: new Date(),
     };
-    const conjuntoDocRef = await addDoc(collection(db, 'conjuntos'), conjuntoData);
+    const conjuntoDocRef = await addDoc(collection(db, `${nombreProyecto}/conjuntos`), conjuntoData);
 
     // 4. Crear el documento del usuario (rol admin) en Firestore
     const adminData = {
@@ -66,7 +66,7 @@ export async function POST(request: Request) {
       conjuntoId: conjuntoDocRef.id, // Enlazamos con el ID del nuevo conjunto
       fechaCreacion: new Date(),
     };
-    await setDoc(doc(db, 'users', adminUid), adminData);
+    await setDoc(doc(db, `${nombreProyecto}/users`, adminUid), adminData);
 
     return NextResponse.json(
       {

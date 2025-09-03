@@ -1,16 +1,16 @@
-import { db } from '@/lib/firebase';
+import { db, nombreProyecto } from '@/lib/firebase';
 import { collection, addDoc, getDocs } from 'firebase/firestore';
 import { NextResponse } from 'next/server';
 
 export async function POST(request: Request) {
-  const { 
-    cedula, 
-    codigo, 
-    nombre, 
-    correo, 
-    celular, 
-    datosPersonales, 
-    contactoEmergencia 
+  const {
+    cedula,
+    codigo,
+    nombre,
+    correo,
+    celular,
+    datosPersonales,
+    contactoEmergencia
   } = await request.json();
 
   if (!cedula || !codigo || !nombre || !correo || !celular) {
@@ -18,7 +18,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const docRef = await addDoc(collection(db, "trainers"), {
+    const docRef = await addDoc(collection(db, `${nombreProyecto}/trainers`), {
       cedula,
       codigo,
       nombre,
@@ -36,7 +36,7 @@ export async function POST(request: Request) {
 
 export async function GET() {
   try {
-    const querySnapshot = await getDocs(collection(db, "trainers"));
+    const querySnapshot = await getDocs(collection(db, `${nombreProyecto}/trainers`));
     const trainers = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     return NextResponse.json(trainers, { status: 200 });
   } catch (error) {
