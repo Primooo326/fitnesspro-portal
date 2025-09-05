@@ -2,18 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { ConjuntoResidencial } from '@/models/interfaces';
 
-// Definimos un tipo para los datos del conjunto
-interface Conjunto {
-  id: string;
-  nombre: string;
-  administradorId?: string; // Puede no tener admin al principio
-  // Podríamos añadir más campos como emailAdmin, nombreAdmin, etc.
-  // que obtendríamos cruzando datos con la colección de users.
-}
 
 export default function ConjuntosList() {
-  const [conjuntos, setConjuntos] = useState<Conjunto[]>([]);
+  const [conjuntos, setConjuntos] = useState<ConjuntoResidencial[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
