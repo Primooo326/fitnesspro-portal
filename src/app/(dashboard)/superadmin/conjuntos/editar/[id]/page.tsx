@@ -25,7 +25,7 @@ export default function EditarConjuntoPage() {
     const fetchConjunto = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`/api/superadmin/conjuntos/${id}`);
+        const response = await fetch(`/api/conjuntos/${id}`);
         if (!response.ok) {
           throw new Error('No se pudo cargar la información del conjunto.');
         }

@@ -63,8 +63,9 @@ export enum EstadoPago {
 export interface UsuarioBase {
     id: string;
     nombre: string;
-    correo: string;
+    email: string;
     rol: RolUsuario;
+    fechaCreacion: Date;
 }
 
 /**
@@ -87,7 +88,7 @@ export interface AdministradorConjunto extends UsuarioBase {
     rol: RolUsuario.ADMINISTRADOR;
     conjuntoId: string; // El conjunto que administra
     telefono: string;
-    correo: string;
+    email: string;
 }
 
 /**
@@ -106,6 +107,10 @@ export interface Entrenador extends UsuarioBase {
     disponibilidad: Disponibilidad[];// Calendario de disponibilidad 
     calificaciones: Calificacion[];// Calificaciones recibidas
     comision: number;// Porcentaje de comisión, ej: 0.50 para 50% 
+}
+
+export interface SuperAdmin extends UsuarioBase {
+
 }
 
 // --- Interfaces de Gestión del Conjunto ---
@@ -133,11 +138,13 @@ export interface Horario {
  * Representa a un conjunto residencial. 
  */
 export interface ConjuntoResidencial {
-    id: string;
-    nombre: string;// 
-    codigoQR: string;// URL o data del QR para registro 
-    zonasDeportivas: ZonaDeportiva[];// 
-    usuarios: Residente[];// Lista de usuarios del conjunto 
+    id?: string;
+    nombre: string;
+    direccion: string;
+    administradorId: string | null;
+    zonasDeportivas: ZonaDeportiva[];
+    usuarios: Residente[];
+    state: boolean;
 }
 
 // --- Interfaces de Módulos Funcionales ---

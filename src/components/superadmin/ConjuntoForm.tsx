@@ -2,46 +2,48 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { ConjuntoResidencial } from '@/models/interfaces';
 
 interface ConjuntoFormProps {
-  isEditMode?: boolean;
-  initialData?: { [key: string]: any };
-  conjuntoId?: string;
+  isEditMode: boolean;
+  initialData?: ConjuntoResidencial;
 }
 
-export default function ConjuntoForm({ isEditMode = false, initialData = {}, conjuntoId }: ConjuntoFormProps) {
+export default function ConjuntoForm({ isEditMode = false, initialData }: ConjuntoFormProps) {
   const router = useRouter();
-  const [formData, setFormData] = useState({
-    nombreConjunto: '',
-    direccion: '',
-    nombreAdmin: '',
-    emailAdmin: '',
-  });
+  const [formData, setFormData] = useState(
+    {
+      id: "",
+      nombre: '',
+      direccion: '',
+      administradorId: '',
+      zonasDeportivas: [],
+      usuarios: [],
+      nombreAdmin: '',
+      emailAdmin: ''
+    }
+  );
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (isEditMode) {
-      setFormData({
-        nombreConjunto: initialData.nombre || '',
-        direccion: initialData.direccion || '',
-        nombreAdmin: '', // No editamos el admin desde aquí
-        emailAdmin: '',  // No editamos el admin desde aquí
-      });
+    if (isEditMode && initialData) {
+      const data: any = { ...initialData }
+      setFormData(data);
     }
   }, [isEditMode, initialData]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev: any) => ({ ...prev, [name]: value }));
   };
-
+  // TODO poder seleccionar un administrador si el conjunto ya tiene uno creado
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
 
-    const url = isEditMode ? `/api/superadmin/conjuntos/${conjuntoId}` : '/api/superadmin/conjuntos';
+    const url = isEditMode ? `/api/conjuntos/${initialData?.id}` : '/api/conjuntos';
     const method = isEditMode ? 'PUT' : 'POST';
 
     try {
@@ -58,7 +60,7 @@ export default function ConjuntoForm({ isEditMode = false, initialData = {}, con
 
       alert(`¡Conjunto ${isEditMode ? 'actualizado' : 'creado'} exitosamente!`);
       router.push('/superadmin/conjuntos');
-      router.refresh(); // Refresca los datos de la página anterior
+      router.refresh();
 
     } catch (err: any) {
       setError(err.message);
@@ -72,28 +74,32 @@ export default function ConjuntoForm({ isEditMode = false, initialData = {}, con
       <div>
         <h3 className="text-lg font-semibold text-gray-800 mb-2">Información del Conjunto</h3>
         <div className="space-y-4">
-          <div>
-            <label htmlFor="nombreConjunto" className="block text-sm font-medium text-gray-700">Nombre del Conjunto</label>
-            <input type="text" name="nombreConjunto" id="nombreConjunto" value={formData.nombreConjunto} onChange={handleChange} required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" />
+          <div className="w-full">
+            <label className="label-text" htmlFor="nombre">Nombre del Conjunto</label>
+            <input type="text" name="nombre" id="nombre" value={formData.nombre} onChange={handleChange} required className="input" />
+            <span className="helper-text">Escribe el nombre completo del conjunto</span>
           </div>
-          <div>
-            <label htmlFor="direccion" className="block text-sm font-medium text-gray-700">Dirección</label>
-            <input type="text" name="direccion" id="direccion" value={formData.direccion} onChange={handleChange} required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" />
+          <div className="w-full">
+            <label className="label-text" htmlFor="direccion">Dirección</label>
+            <input type="text" name="direccion" id="direccion" value={formData.direccion} onChange={handleChange} required className="input" />
+            <span className="helper-text">Escribe la dirección del conjunto</span>
           </div>
         </div>
       </div>
 
       {!isEditMode && (
-        <div className="border-t border-gray-200 pt-6">
-          <h3 className="text-lg font-semibold text-gray-800 mb-2">Información del Administrador Inicial</h3>
+        <div>
+          <h3 className="text-lg font-semibold text-gray-800 mb-2">Información del Administrador</h3>
           <div className="space-y-4">
-            <div>
-              <label htmlFor="nombreAdmin" className="block text-sm font-medium text-gray-700">Nombre del Administrador</label>
-              <input type="text" name="nombreAdmin" id="nombreAdmin" value={formData.nombreAdmin} onChange={handleChange} required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" />
+            <div className="w-full">
+              <label className="label-text" htmlFor="nombreAdmin">Nombre del Administrador</label>
+              <input type="text" name="nombreAdmin" id="nombreAdmin" value={formData.nombreAdmin} onChange={handleChange} required className="input" />
+              <span className="helper-text">Escribe el nombre completo del administrador</span>
             </div>
-            <div>
-              <label htmlFor="emailAdmin" className="block text-sm font-medium text-gray-700">Email del Administrador</label>
-              <input type="email" name="emailAdmin" id="emailAdmin" value={formData.emailAdmin} onChange={handleChange} required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" />
+            <div className="w-full">
+              <label className="label-text" htmlFor="emailAdmin">Email del Administrador</label>
+              <input type="email" name="emailAdmin" id="emailAdmin" value={formData.emailAdmin} onChange={handleChange} required className="input" />
+              <span className="helper-text">Escribe el correo electrónico del administrador</span>
             </div>
           </div>
         </div>
@@ -116,3 +122,4 @@ export default function ConjuntoForm({ isEditMode = false, initialData = {}, con
     </form>
   );
 }
+

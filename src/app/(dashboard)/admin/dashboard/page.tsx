@@ -17,9 +17,9 @@ export default function AdminDashboardPage() {
   const { conjuntoData } = useAuthStore();
 
   // Invented metrics
-  const totalResidents = Math.floor(Math.random() * 500) + 100; // 100-600 residents
-  const activeZones = Math.floor(Math.random() * 5) + 1; // 1-5 active zones
-  const bookingsToday = Math.floor(Math.random() * 50) + 10; // 10-60 bookings
+  const totalResidents = 100; // 100-600 residents
+  const activeZones = 2; // 1-5 active zones
+  const bookingsToday = 10; // 10-60 bookings
 
   useEffect(() => {
     const fetchZonas = async () => {

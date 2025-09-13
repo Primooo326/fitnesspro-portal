@@ -17,5 +17,4 @@ const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
-const nombreProyecto = "proyectos/FITNESSPRO"
-export { app, auth, db, storage, nombreProyecto };
+export { app, auth, db, storage };

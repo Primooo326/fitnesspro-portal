@@ -1,51 +1,40 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { auth, db } from '@/lib/firebase';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
 import { useAuthStore } from '@/lib/store';
+import { getLoggedUser, login } from '@/services/login.service';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const router = useRouter();
-  const { setUser, setConjuntoData } = useAuthStore();
+  const { setUser } = useAuthStore();
+  useEffect(() => {
+
+    const loggedUser = getLoggedUser();
+    if (loggedUser) {
+      setUser(loggedUser);
+      router.push('/superadmin');
+    }
+
+  }, [])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-      setUser(user);
 
-      // Fetch user's custom data from Firestore
-      const userDocRef = doc(db, 'users', user.uid);
-      const userDocSnap = await getDoc(userDocRef);
 
-      if (userDocSnap.exists()) {
-        const userData = userDocSnap.data();
-        // Assuming userData contains a 'conjuntoId' field
-        if (userData.conjuntoId) {
-          const conjuntoDocRef = doc(db, 'conjuntos', userData.conjuntoId);
-          const conjuntoDocSnap = await getDoc(conjuntoDocRef);
-          if (conjuntoDocSnap.exists()) {
-            setConjuntoData(conjuntoDocSnap.data());
-          } else {
-            console.warn('Conjunto data not found for ID:', userData.conjuntoId);
-          }
-        } else {
-          console.warn('User data does not contain conjuntoId:', userData);
-        }
-      } else {
-        console.warn('User document not found in Firestore for UID:', user.uid);
+      const user = await login(email, password);
+
+      if (user) {
+        setUser(user);
+        router.push('/admin/dashboard');
       }
 
-      router.push('/admin/dashboard');
     } catch (err: any) {
       setError(err.message);
       console.error('Login error:', err);

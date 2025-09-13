@@ -1,12 +1,14 @@
 import { NextResponse } from 'next/server';
-import { db, auth, nombreProyecto } from '@/lib/firebase';
-import { collection, getDocs, addDoc, doc, setDoc, updateDoc } from 'firebase/firestore';
+import { auth, db } from '@/lib/firebase';
+import { collection, getDocs, addDoc, query, where } from 'firebase/firestore';
+import { PATH_CONJUNTOS, PATH_USERS } from '@/lib/constants';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { AdministradorConjunto, RolUsuario } from '@/models/interfaces';
 
-// GET: Obtener todos los conjuntos
 export async function GET(request: Request) {
   try {
-    const querySnapshot = await getDocs(collection(db, `${nombreProyecto}/conjuntos`));
+    const q = query(collection(db, PATH_CONJUNTOS), where("state", "==", true));
+    const querySnapshot = await getDocs(q);
     const conjuntos = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     return NextResponse.json(conjuntos, { status: 200 });
   } catch (error) {
@@ -15,31 +17,31 @@ export async function GET(request: Request) {
   }
 }
 
-// (El código de la función POST que ya creamos sigue aquí...)
-// Helper para generar una contraseña temporal segura
 const generateTemporaryPassword = () => {
   return Math.random().toString(36).slice(-8);
 };
 
 export async function POST(request: Request) {
   try {
-    const { nombreConjunto, direccion, nombreAdmin, emailAdmin } = await request.json();
+    const { nombre, direccion, nombreAdmin, emailAdmin } = await request.json();
 
-    // 1. Validación de datos de entrada
-    if (!nombreConjunto || !nombreAdmin || !emailAdmin) {
+    if (!nombre || !nombreAdmin || !emailAdmin) {
       return NextResponse.json({ error: 'Faltan campos requeridos.' }, { status: 400 });
     }
 
-    const temporaryPassword = generateTemporaryPassword();
-    let adminCredential;
 
-    // 2. Crear usuario en Firebase Authentication
+    const conjuntoData = {
+      nombre: nombre,
+      direccion: direccion || '',
+      administradorId: '',
+      state: true,
+    };
+    const temporaryPassword = generateTemporaryPassword();
+    let adminCredential
     try {
       adminCredential = await createUserWithEmailAndPassword(auth, emailAdmin, temporaryPassword);
-      // En una app real, aquí enviarías un email al admin con su contraseña temporal.
       console.log(`Contraseña temporal para ${emailAdmin}: ${temporaryPassword}`);
     } catch (error: any) {
-      // Error común: el email ya está en uso
       if (error.code === 'auth/email-already-in-use') {
         return NextResponse.json({ error: 'El correo del administrador ya está registrado.' }, { status: 409 });
       }
@@ -48,31 +50,28 @@ export async function POST(request: Request) {
     }
 
     const adminUid = adminCredential.user.uid;
+    conjuntoData.administradorId = adminUid;
 
-    // 3. Crear el documento del conjunto en Firestore
-    const conjuntoData = {
-      nombre: nombreConjunto,
-      direccion: direccion,
-      administradorId: adminUid, // Enlazamos con el UID del admin
-      fechaCreacion: new Date(),
-    };
-    const conjuntoDocRef = await addDoc(collection(db, `${nombreProyecto}/conjuntos`), conjuntoData);
+    const conjuntoDocRef = await addDoc(collection(db, PATH_CONJUNTOS), conjuntoData);
 
-    // 4. Crear el documento del usuario (rol admin) en Firestore
-    const adminData = {
+
+    const adminData: AdministradorConjunto = {
       nombre: nombreAdmin,
       email: emailAdmin,
-      rol: 'admin', // Asignamos el rol de administrador de conjunto
-      conjuntoId: conjuntoDocRef.id, // Enlazamos con el ID del nuevo conjunto
+      telefono: '',
+      rol: RolUsuario.ADMINISTRADOR,
       fechaCreacion: new Date(),
-    };
-    await setDoc(doc(db, `${nombreProyecto}/users`, adminUid), adminData);
+      id: adminUid,
+      conjuntoId: conjuntoDocRef.id,
+    }
+
+
+    await addDoc(collection(db, PATH_USERS), adminData);
 
     return NextResponse.json(
       {
         message: 'Conjunto y administrador creados exitosamente',
         conjuntoId: conjuntoDocRef.id,
-        adminUid: adminUid,
       },
       { status: 201 }
     );

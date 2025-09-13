@@ -1,19 +1,22 @@
 import { NextResponse } from 'next/server';
-import { db, nombreProyecto } from '@/lib/firebase';
+import { db } from '@/lib/firebase';
 import { doc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { PATH_CONJUNTOS, PATH_USERS } from '@/lib/constants';
 
-// GET: Obtener un conjunto específico por ID
 export async function GET(request: Request, { params }: { params: { id: string } }) {
   try {
     const { id } = params;
-    const docRef = doc(db, `${nombreProyecto}/conjuntos`, id);
-    const docSnap = await getDoc(docRef);
+    const docRefConjunto = doc(db, PATH_CONJUNTOS, id);
+    const docSnapConjunto = await getDoc(docRefConjunto);
 
-    if (!docSnap.exists()) {
+    if (!docSnapConjunto.exists()) {
       return NextResponse.json({ error: 'Conjunto no encontrado' }, { status: 404 });
     }
 
-    return NextResponse.json({ id: docSnap.id, ...docSnap.data() }, { status: 200 });
+    const docRefAdmin = doc(db, PATH_USERS, docSnapConjunto.data().administradorId);
+    const docSnapAdmin = await getDoc(docRefAdmin);
+
+    return NextResponse.json({ id: docSnapConjunto.id, ...docSnapConjunto.data(), administrador: docSnapAdmin.data() }, { status: 200 });
 
   } catch (error) {
     console.error("Error fetching conjunto:", error);
@@ -25,16 +28,16 @@ export async function GET(request: Request, { params }: { params: { id: string }
 export async function PUT(request: Request, { params }: { params: { id: string } }) {
   try {
     const { id } = params;
-    const { nombreConjunto, direccion } = await request.json();
+    const { nombre, direccion } = await request.json();
 
-    if (!nombreConjunto || !direccion) {
+    if (!nombre || !direccion) {
       return NextResponse.json({ error: 'Faltan campos requeridos' }, { status: 400 });
     }
 
-    const docRef = doc(db, `${nombreProyecto}/conjuntos`, id);
+    const docRef = doc(db, PATH_CONJUNTOS, id);
     await updateDoc(docRef, {
-      nombre: nombreConjunto,
-      direccion: direccion,
+      nombre,
+      direccion
     });
 
     return NextResponse.json({ message: 'Conjunto actualizado exitosamente' }, { status: 200 });
@@ -50,26 +53,18 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
   try {
     const { id } = params;
 
-    // TODO: Implementar una lógica más robusta con Firebase Admin SDK.
-    // Esta implementación simplificada no elimina el usuario de Firebase Auth,
-    // solo los documentos de Firestore.
 
-    const conjuntoRef = doc(db, `${nombreProyecto}/conjuntos`, id);
+    const conjuntoRef = doc(db, PATH_CONJUNTOS, id);
     const conjuntoSnap = await getDoc(conjuntoRef);
 
     if (!conjuntoSnap.exists()) {
       return NextResponse.json({ error: 'Conjunto no encontrado' }, { status: 404 });
     }
 
-    const adminUid = conjuntoSnap.data().administradorId;
-
-    // Eliminar el documento del conjunto
-    await deleteDoc(conjuntoRef);
-
-    // Eliminar el documento del usuario admin asociado (si existe)
-    if (adminUid) {
-      await deleteDoc(doc(db, 'users', adminUid));
-    }
+    //actualizar el estado del conjunto
+    await updateDoc(conjuntoRef, {
+      state: false
+    });
 
     return NextResponse.json({ message: 'Conjunto y administrador asociado eliminados de Firestore' }, { status: 200 });
 

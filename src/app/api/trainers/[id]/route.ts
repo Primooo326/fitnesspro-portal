@@ -5,7 +5,7 @@ import { NextResponse } from 'next/server';
 export async function GET(request: Request, { params }: { params: { id: string } }) {
   const { id } = params;
   try {
-    const docRef = doc(db, `${nombreProyecto}/trainers`, id);
+    const docRef = doc(db, PATH_USERS, id);
     const docSnap = await getDoc(docRef);
 
     if (!docSnap.exists()) {
@@ -23,7 +23,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
   const data = await request.json();
 
   try {
-    const docRef = doc(db, `${nombreProyecto}/trainers`, id);
+    const docRef = doc(db, PATH_USERS, id);
     await updateDoc(docRef, data);
     return NextResponse.json({ message: "Entrenador actualizado exitosamente" }, { status: 200 });
   } catch (error) {
@@ -35,7 +35,7 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
   const { id } = params;
 
   try {
-    const docRef = doc(db, `${nombreProyecto}/trainers`, id);
+    const docRef = doc(db, PATH_USERS, id);
     await deleteDoc(docRef);
     return NextResponse.json({ message: "Entrenador eliminado exitosamente" }, { status: 200 });
   } catch (error) {
