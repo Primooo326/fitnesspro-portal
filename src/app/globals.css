@@ -1,5 +1,6 @@
 @import "tailwindcss";
+@plugin "@iconify/tailwind4";
 
 @plugin "flyonui" {
-  themes: shadcn --default;
+  themes: shadcn --default, corporate;
 }

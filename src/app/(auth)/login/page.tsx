@@ -4,19 +4,31 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/store';
 import { getLoggedUser, login } from '@/services/login.service';
+import Link from 'next/link';
+import { RolUsuario } from '@/models/interfaces';
 
 export default function LoginPage() {
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const router = useRouter();
   const { setUser } = useAuthStore();
+
   useEffect(() => {
 
-    const loggedUser = getLoggedUser();
-    if (loggedUser) {
-      setUser(loggedUser);
-      router.push('/superadmin');
+    const user = getLoggedUser();
+    if (user) {
+      setUser(user);
+      if (user.rol === RolUsuario.SUPER) {
+        router.push('/superadmin');
+      } else if (user.rol === RolUsuario.ADMINISTRADOR) {
+        router.push('/admin');
+      } else if (user.rol === RolUsuario.ENTRENADOR) {
+        router.push('/trainer');
+      } else if (user.rol === RolUsuario.RESIDENTE) {
+        router.push('/resident');
+      }
     }
 
   }, [])
@@ -32,7 +44,17 @@ export default function LoginPage() {
 
       if (user) {
         setUser(user);
-        router.push('/admin/dashboard');
+
+        if (user.rol === RolUsuario.SUPER) {
+          router.push('/superadmin');
+        } else if (user.rol === RolUsuario.ADMINISTRADOR) {
+          router.push('/admin');
+        } else if (user.rol === RolUsuario.ENTRENADOR) {
+          router.push('/trainer');
+        } else if (user.rol === RolUsuario.RESIDENTE) {
+          router.push('/resident');
+        }
+
       }
 
     } catch (err: any) {
@@ -80,6 +102,9 @@ export default function LoginPage() {
             >
               Iniciar Sesión
             </button>
+            <Link className="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800" href="/forgot-password">
+              ¿Olvidaste tu contraseña?
+            </Link>
           </div>
         </form>
       </div>
