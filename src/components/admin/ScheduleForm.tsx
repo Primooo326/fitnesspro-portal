@@ -2,43 +2,84 @@
 
 import { useState } from 'react';
 
+import { Horario } from '@/models/interfaces';
+
+type ScheduleFormData = Omit<Horario, 'id'>;
+
+import { useEffect } from 'react';
+
 interface ScheduleFormProps {
-  onCreate: (schedule: { dia: string; horaInicio: string; horaFin: string; aforo: number }) => void;
+  onSubmit: (schedule: ScheduleFormData) => void;
+  initialData?: ScheduleFormData | null;
+  isEditing?: boolean;
+  onClose?: () => void;
 }
 
-export default function ScheduleForm({ onCreate }: ScheduleFormProps) {
-  const [newHorario, setNewHorario] = useState({ dia: '', horaInicio: '', horaFin: '', aforo: 0 });
+const DIAS_SEMANA = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'] as const;
+const initialState: ScheduleFormData = { dia: 'Lunes', horaInicio: '', horaFin: '', aforo: 1 };
+
+export default function ScheduleForm({ onSubmit, initialData, isEditing = false, onClose }: ScheduleFormProps) {
+  const [formData, setFormData] = useState<ScheduleFormData>(initialState);
+
+  useEffect(() => {
+    if (isEditing && initialData) {
+      setFormData(initialData);
+    } else {
+      setFormData(initialState);
+    }
+  }, [isEditing, initialData]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onCreate(newHorario);
-    setNewHorario({ dia: '', horaInicio: '', horaFin: '', aforo: 0 });
+    onSubmit(formData);
+    if (!isEditing) {
+      setFormData(initialState);
+    }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setNewHorario(prev => ({ ...prev, [name]: value }));
+    const parsedValue = name === 'aforo' ? parseInt(value, 10) || 1 : value;
+    setFormData(prev => ({ ...prev, [name]: parsedValue }));
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label className="block">Día</label>
-        <input type="text" name="dia" value={newHorario.dia} onChange={handleInputChange} className="border p-2 rounded w-full" required />
+        <label htmlFor="dia-select" className="block text-sm font-medium text-gray-700">Día</label>
+        <select
+          id="dia-select"
+          name="dia"
+          value={formData.dia}
+          onChange={handleInputChange}
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+          required
+        >
+          {DIAS_SEMANA.map(dia => <option key={dia} value={dia}>{dia}</option>)}
+        </select>
       </div>
       <div>
-        <label className="block">Hora Inicio</label>
-        <input type="time" name="horaInicio" value={newHorario.horaInicio} onChange={handleInputChange} className="border p-2 rounded w-full" required />
+        <label className="block text-sm font-medium text-gray-700">Hora Inicio</label>
+        <input type="time" name="horaInicio" value={formData.horaInicio} onChange={handleInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required />
       </div>
       <div>
-        <label className="block">Hora Fin</label>
-        <input type="time" name="horaFin" value={newHorario.horaFin} onChange={handleInputChange} className="border p-2 rounded w-full" required />
+        <label className="block text-sm font-medium text-gray-700">Hora Fin</label>
+        <input type="time" name="horaFin" value={formData.horaFin} onChange={handleInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required />
       </div>
       <div>
-        <label className="block">Aforo</label>
-        <input type="number" name="aforo" value={newHorario.aforo} onChange={handleInputChange} className="border p-2 rounded w-full" required />
+        <label className="block text-sm font-medium text-gray-700">Aforo</label>
+        <input type="number" name="aforo" value={formData.aforo} onChange={handleInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" min="1" required />
       </div>
-      <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded">Crear Horario</button>
+      <div className="flex justify-end space-x-2">
+        {onClose && (
+          <button type="button" onClick={onClose} className="bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300">
+            Cancelar
+          </button>
+        )}
+        <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">
+          {isEditing ? 'Actualizar Horario' : 'Crear Horario'}
+        </button>
+      </div>
     </form>
   );
 }

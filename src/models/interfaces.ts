@@ -121,7 +121,9 @@ export interface SuperAdmin extends UsuarioBase {
 export interface ZonaDeportiva {
     id: string;
     nombre: 'Gimnasio' | 'Piscina' | string; // Nombres comunes
-    horarios: Horario[];// Horarios de la zona 
+    descripcion: string;
+    urlImagen?: string;
+    horarios: Horario[];// Horarios de la zona
 }
 
 /**
@@ -132,6 +134,7 @@ export interface Horario {
     dia: 'Lunes' | 'Martes' | 'Miércoles' | 'Jueves' | 'Viernes' | 'Sábado' | 'Domingo';
     horaInicio: string; // Formato HH:mm
     horaFin: string; // Formato HH:mm
+    aforo: number;
 }
 
 /**

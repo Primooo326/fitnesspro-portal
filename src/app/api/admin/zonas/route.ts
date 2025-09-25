@@ -1,22 +1,31 @@
-import { db, nombreProyecto } from '@/lib/firebase';
-import { collection, addDoc, getDocs, query, where } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { collection, addDoc, getDocs, query } from 'firebase/firestore';
 import { NextResponse } from 'next/server';
 
 export async function POST(request: Request) {
-  const { nombre, conjuntoId, aforo } = await request.json();
+  const { nombre, conjuntoId, aforo, descripcion, urlImagen } = await request.json();
 
-  if (!nombre || !conjuntoId || aforo === undefined) {
-    return NextResponse.json({ error: "Faltan campos requeridos" }, { status: 400 });
+  if (!nombre || !conjuntoId || aforo === undefined || !descripcion) {
+    return NextResponse.json({ error: "Faltan campos requeridos: nombre, conjuntoId, aforo, descripcion" }, { status: 400 });
   }
 
   try {
-    const docRef = await addDoc(collection(db, `conjuntos/${conjuntoId}/zonas`), {
+    const newZoneData = {
       nombre,
       aforo,
-    });
-    return NextResponse.json({ message: "Zona creada exitosamente", id: docRef.id }, { status: 201 });
+      descripcion,
+      ...(urlImagen && { urlImagen }), // Añadir solo si existe
+      // horarios se inicializa vacío por defecto
+      horarios: [],
+    };
+
+    const docRef = await addDoc(collection(db, `conjuntos/${conjuntoId}/zonas`), newZoneData);
+
+    // Devolver el objeto completo para que el frontend pueda actualizar el estado
+    return NextResponse.json({ ...newZoneData, id: docRef.id }, { status: 201 });
   } catch (error) {
-    return NextResponse.json({ error: "Error al crear la zona" }, { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : "Un error desconocido ocurrió";
+    return NextResponse.json({ error: "Error al crear la zona", details: errorMessage }, { status: 500 });
   }
 }
 

@@ -1,14 +1,18 @@
-import { db, nombreProyecto } from '@/lib/firebase';
+import { db } from '@/lib/firebase';
 import { doc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { NextResponse } from 'next/server';
 
-// TODO: Replace with actual authenticated user's conjuntoId
-const conjuntoId = "HARDCODED_CONJUNTO_ID";
-
 export async function GET(request: Request, { params }: { params: { zonaId: string } }) {
   const { zonaId } = params;
+  const { searchParams } = new URL(request.url);
+  const conjuntoId = searchParams.get('conjuntoId');
+
+  if (!conjuntoId) {
+    return NextResponse.json({ error: "El ID del conjunto es requerido" }, { status: 400 });
+  }
+
   try {
-    const docRef = doc(db, `${nombreProyecto}/conjuntos`, conjuntoId, "zonas", zonaId);
+    const docRef = doc(db, `conjuntos/${conjuntoId}/zonas`, zonaId);
     const docSnap = await getDoc(docRef);
 
     if (!docSnap.exists()) {
@@ -23,11 +27,15 @@ export async function GET(request: Request, { params }: { params: { zonaId: stri
 
 export async function PUT(request: Request, { params }: { params: { zonaId: string } }) {
   const { zonaId } = params;
-  const data = await request.json();
+  const { conjuntoId, ...dataToUpdate } = await request.json();
+
+  if (!conjuntoId) {
+    return NextResponse.json({ error: "El ID del conjunto es requerido" }, { status: 400 });
+  }
 
   try {
-    const docRef = doc(db, `${nombreProyecto}/conjuntos`, conjuntoId, "zonas", zonaId);
-    await updateDoc(docRef, data);
+    const docRef = doc(db, `conjuntos/${conjuntoId}/zonas`, zonaId);
+    await updateDoc(docRef, dataToUpdate);
     return NextResponse.json({ message: "Zona actualizada exitosamente" }, { status: 200 });
   } catch (error) {
     return NextResponse.json({ error: "Error al actualizar la zona" }, { status: 500 });
@@ -36,12 +44,19 @@ export async function PUT(request: Request, { params }: { params: { zonaId: stri
 
 export async function DELETE(request: Request, { params }: { params: { zonaId: string } }) {
   const { zonaId } = params;
+  const { conjuntoId } = await request.json(); // Se espera el conjuntoId en el body
+
+  if (!conjuntoId) {
+    return NextResponse.json({ error: "El ID del conjunto es requerido" }, { status: 400 });
+  }
 
   try {
-    const docRef = doc(db, `${nombreProyecto}/conjuntos`, conjuntoId, "zonas", zonaId);
+    // Aquí se asume que la estructura es `conjuntos/{conjuntoId}/zonas/{zonaId}`
+    const docRef = doc(db, `conjuntos/${conjuntoId}/zonas`, zonaId);
     await deleteDoc(docRef);
     return NextResponse.json({ message: "Zona eliminada exitosamente" }, { status: 200 });
   } catch (error) {
-    return NextResponse.json({ error: "Error al eliminar la zona" }, { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : "Un error desconocido ocurrió";
+    return NextResponse.json({ error: "Error al eliminar la zona", details: errorMessage }, { status: 500 });
   }
 }

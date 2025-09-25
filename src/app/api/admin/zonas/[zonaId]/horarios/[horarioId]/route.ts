@@ -1,14 +1,18 @@
-import { db, nombreProyecto } from '@/lib/firebase';
+import { db } from '@/lib/firebase';
 import { doc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { NextResponse } from 'next/server';
 
-// TODO: Replace with actual authenticated user's conjuntoId
-const conjuntoId = "HARDCODED_CONJUNTO_ID";
-
 export async function GET(request: Request, { params }: { params: { zonaId: string, horarioId: string } }) {
   const { zonaId, horarioId } = params;
+  const { searchParams } = new URL(request.url);
+  const conjuntoId = searchParams.get('conjuntoId');
+
+  if (!conjuntoId) {
+    return NextResponse.json({ error: "El ID del conjunto es requerido" }, { status: 400 });
+  }
+
   try {
-    const docRef = doc(db, `${nombreProyecto}/conjuntos`, conjuntoId, "zonas", zonaId, "horarios", horarioId);
+    const docRef = doc(db, `conjuntos/${conjuntoId}/zonas/${zonaId}/horarios`, horarioId);
     const docSnap = await getDoc(docRef);
 
     if (!docSnap.exists()) {
@@ -23,11 +27,15 @@ export async function GET(request: Request, { params }: { params: { zonaId: stri
 
 export async function PUT(request: Request, { params }: { params: { zonaId: string, horarioId: string } }) {
   const { zonaId, horarioId } = params;
-  const data = await request.json();
+  const { conjuntoId, ...dataToUpdate } = await request.json();
+
+  if (!conjuntoId) {
+    return NextResponse.json({ error: "El ID del conjunto es requerido" }, { status: 400 });
+  }
 
   try {
-    const docRef = doc(db, `${nombreProyecto}/conjuntos`, conjuntoId, "zonas", zonaId, "horarios", horarioId);
-    await updateDoc(docRef, data);
+    const docRef = doc(db, `conjuntos/${conjuntoId}/zonas/${zonaId}/horarios`, horarioId);
+    await updateDoc(docRef, dataToUpdate);
     return NextResponse.json({ message: "Horario actualizado exitosamente" }, { status: 200 });
   } catch (error) {
     return NextResponse.json({ error: "Error al actualizar el horario" }, { status: 500 });
@@ -36,9 +44,14 @@ export async function PUT(request: Request, { params }: { params: { zonaId: stri
 
 export async function DELETE(request: Request, { params }: { params: { zonaId: string, horarioId: string } }) {
   const { zonaId, horarioId } = params;
+  const { conjuntoId } = await request.json();
+
+  if (!conjuntoId) {
+    return NextResponse.json({ error: "El ID del conjunto es requerido" }, { status: 400 });
+  }
 
   try {
-    const docRef = doc(db, `${nombreProyecto}/conjuntos`, conjuntoId, "zonas", zonaId, "horarios", horarioId);
+    const docRef = doc(db, `conjuntos/${conjuntoId}/zonas/${zonaId}/horarios`, horarioId);
     await deleteDoc(docRef);
     return NextResponse.json({ message: "Horario eliminado exitosamente" }, { status: 200 });
   } catch (error) {
