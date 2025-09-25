@@ -14,8 +14,8 @@ export const sidebarRoutes = {
         { name: 'Entrenadores', href: '/superadmin/trainers' },
     ],
     admin: [
-        { name: 'Conjuntos', href: '/admin/conjuntos' },
-        { name: 'Usuarios', href: '/superadmin/users' }
+        { name: 'Usuarios', href: '/superadmin/users' },
+        { name: 'Zonas', href: '/admin/zonas' },
     ],
     trainer: [
         { name: 'Perfil', href: '/trainer/perfil' },

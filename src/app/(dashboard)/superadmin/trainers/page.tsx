@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import GenericTable, { Column } from '@/components/common/GenericTable';
+
 
 interface Trainer {
   id: string;
@@ -29,6 +31,20 @@ export default function TrainersPage() {
     }
   };
 
+  const columns: Column<Trainer>[] = [
+    { header: 'Nombre', accessor: 'nombre' },
+    { header: 'Correo', accessor: 'correo' },
+    { header: 'Celular', accessor: 'celular' },
+  ];
+
+  const renderActions = (trainer: Trainer) => (
+    <>
+      <Link href={`/superadmin/trainers/editar/${trainer.id}`} className="text-blue-500 mr-4">Editar</Link>
+      <button onClick={() => handleDelete(trainer.id)} className="text-red-500">Eliminar</button>
+    </>
+  );
+
+
   return (
     <div>
       <div className="flex justify-between items-center mb-4">
@@ -37,31 +53,11 @@ export default function TrainersPage() {
           Nuevo Entrenador
         </Link>
       </div>
-      <div className="overflow-x-auto">
-        <table className="min-w-full bg-white">
-          <thead>
-            <tr>
-              <th className="py-2 px-4 border-b">Nombre</th>
-              <th className="py-2 px-4 border-b">Correo</th>
-              <th className="py-2 px-4 border-b">Celular</th>
-              <th className="py-2 px-4 border-b">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {trainers.map(trainer => (
-              <tr key={trainer.id}>
-                <td className="py-2 px-4 border-b">{trainer.nombre}</td>
-                <td className="py-2 px-4 border-b">{trainer.correo}</td>
-                <td className="py-2 px-4 border-b">{trainer.celular}</td>
-                <td className="py-2 px-4 border-b">
-                  <Link href={`/superadmin/trainers/editar/${trainer.id}`} className="text-blue-500 mr-4">Editar</Link>
-                  <button onClick={() => handleDelete(trainer.id)} className="text-red-500">Eliminar</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <GenericTable
+        data={trainers}
+        columns={columns}
+        renderActions={renderActions}
+      />
     </div>
   );
 }

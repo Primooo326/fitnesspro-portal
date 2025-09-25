@@ -2,16 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import GenericTable, { Column } from '@/components/common/GenericTable';
+import { AdministradorConjunto } from '@/models/interfaces';
 
-interface User {
-  id: string;
-  nombre: string;
-  correo: string;
-  telefono: string;
-}
 
 export default function UsersPage() {
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<AdministradorConjunto[]>([]);
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -29,6 +25,19 @@ export default function UsersPage() {
     }
   };
 
+  const columns: Column<AdministradorConjunto>[] = [
+    { header: 'Nombre', accessor: 'nombre' },
+    { header: 'Correo', accessor: 'email' },
+    { header: 'Teléfono', accessor: 'telefono' },
+  ];
+
+  const renderActions = (user: AdministradorConjunto) => (
+    <>
+      <Link href={`/superadmin/users/editar/${user.id}`} className="text-blue-500 mr-4">Editar</Link>
+      <button onClick={() => handleDelete(user.id)} className="text-red-500">Eliminar</button>
+    </>
+  );
+
   return (
     <div>
       <div className="flex justify-between items-center mb-4">
@@ -37,31 +46,11 @@ export default function UsersPage() {
           Nuevo Usuario
         </Link>
       </div>
-      <div className="overflow-x-auto">
-        <table className="min-w-full bg-white">
-          <thead>
-            <tr>
-              <th className="py-2 px-4 border-b">Nombre</th>
-              <th className="py-2 px-4 border-b">Correo</th>
-              <th className="py-2 px-4 border-b">Teléfono</th>
-              <th className="py-2 px-4 border-b">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map(user => (
-              <tr key={user.id}>
-                <td className="py-2 px-4 border-b">{user.nombre}</td>
-                <td className="py-2 px-4 border-b">{user.correo}</td>
-                <td className="py-2 px-4 border-b">{user.telefono}</td>
-                <td className="py-2 px-4 border-b">
-                  <Link href={`/superadmin/users/editar/${user.id}`} className="text-blue-500 mr-4">Editar</Link>
-                  <button onClick={() => handleDelete(user.id)} className="text-red-500">Eliminar</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <GenericTable
+        data={users}
+        columns={columns}
+        renderActions={renderActions}
+      />
     </div>
   );
 }

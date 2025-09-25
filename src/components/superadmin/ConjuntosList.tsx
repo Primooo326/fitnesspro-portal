@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ConjuntoResidencial } from '@/models/interfaces';
+import GenericTable, { Column } from '../common/GenericTable';
 
 
 export default function ConjuntosList() {
@@ -54,39 +55,29 @@ export default function ConjuntosList() {
   if (loading) return <p>Cargando conjuntos...</p>;
   if (error) return <p className="text-red-500">Error: {error}</p>;
 
+  // Definir las columnas para la tabla genérica
+  const columns: Column<ConjuntoResidencial>[] = [
+    { header: 'Nombre', accessor: 'nombre' },
+    { header: 'Dirección', accessor: 'direccion' },
+  ];
+
+  // Función para renderizar los botones de acción
+  const renderActions = (conjunto: ConjuntoResidencial) => (
+    <>
+      <Link href={`/superadmin/conjuntos/editar/${conjunto.id}`} className="btn btn-sm btn-warning">
+        Editar
+      </Link>
+      <button onClick={() => handleDelete(conjunto.id!)} className="btn btn-sm btn-error">
+        Eliminar
+      </button>
+    </>
+  );
+
   return (
-    <div className="w-full overflow-x-auto">
-      <table className="table">
-        <thead>
-          <tr>
-            <th>Nombre</th>
-            <th>Dirección</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {conjuntos.length === 0 ? (
-            <tr>
-              <td colSpan={3} className="p-4 text-center text-gray-500">No hay conjuntos registrados.</td>
-            </tr>
-          ) : (
-            conjuntos.map((conjunto) => (
-              <tr key={conjunto.id}>
-                <td>{conjunto.nombre}</td>
-                <td>{conjunto.direccion}</td>
-                <td className="space-x-2">
-                  <Link href={`/superadmin/conjuntos/editar/${conjunto.id}`} className="btn btn-sm btn-warning">
-                    Editar
-                  </Link>
-                  <button onClick={() => handleDelete(conjunto.id!)} className="btn btn-sm btn-error">
-                    Eliminar
-                  </button>
-                </td>
-              </tr>
-            ))
-          )}
-        </tbody>
-      </table>
-    </div>
+    <GenericTable
+      data={conjuntos}
+      columns={columns}
+      renderActions={renderActions}
+    />
   );
 }
