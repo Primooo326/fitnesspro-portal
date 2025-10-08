@@ -1,26 +1,51 @@
-import { PATH_USERS } from '@/lib/constants';
+import { COLLECTIONS } from '@/lib/constants';
 import { db } from '@/lib/firebase';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
 import { auth } from '@/lib/firebase';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, signOut, sendEmailVerification } from 'firebase/auth';
 
 export const login = async (email: string, password: string) => {
 
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    const uid = userCredential.user.uid;
+    const user = userCredential.user;
+    // Verificar que el correo esté verificado
+    if (!user.emailVerified) {
+        // Cerrar sesión inmediatamente para no dejar sesión inconsistente
+        await signOut(auth);
+        throw new Error('Debes verificar tu correo electrónico antes de iniciar sesión. Revisa tu bandeja de entrada.');
+    }
+    const uid = user.uid;
 
-    const usersCollectionRef = collection(db, PATH_USERS);
-    const q = query(usersCollectionRef, where("id", "==", uid));
-    const querySnapshot = await getDocs(q);
+    // Obtener datos del usuario desde Firestore usando el UID como ID del documento
+    const userDocRef = doc(db, COLLECTIONS.USERS, uid);
+    const userDocSnap = await getDoc(userDocRef);
 
-    if (!querySnapshot.empty) {
-        const userDocSnap = querySnapshot.docs[0];
+
+    if (userDocSnap.exists()) {
         const userData: any = userDocSnap.data();
+        console.log(userData);
         localStorage.setItem('user', JSON.stringify(userData));
         return userData;
     } else {
-        console.warn('User document not found in Firestore for UID:', uid);
+        console.warn('Usuario no encontrado en Firestore:', uid);
         return null;
+    }
+}
+
+export const resendVerificationEmail = async (email: string, password: string) => {
+    // Inicia sesión temporalmente para poder enviar el correo de verificación
+    const cred = await signInWithEmailAndPassword(auth, email, password);
+    try {
+        if (cred.user.emailVerified) {
+            // Si ya está verificado, no tiene sentido reenviar
+            await signOut(auth);
+            return { alreadyVerified: true };
+        }
+        await sendEmailVerification(cred.user);
+        return { sent: true };
+    } finally {
+        // Cierra sesión para no dejar sesión abierta
+        await signOut(auth);
     }
 }
 
@@ -33,7 +58,14 @@ export const getLoggedUser = () => {
     }
 }
 
-export const logout = () => {
-    localStorage.removeItem('user');
+export const logout = async () => {
+    try {
+        await signOut(auth);
+        localStorage.removeItem('user');
+    } catch (error) {
+        console.error('Error en logout:', error);
+        // Forzar limpieza local incluso si falla signOut
+        localStorage.removeItem('user');
+    }
 }
 

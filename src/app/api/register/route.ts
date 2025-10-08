@@ -3,6 +3,7 @@ import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { NextResponse } from 'next/server';
 import { RolUsuario, Residente } from '@/models/interfaces';
+import { PATH_CONJUNTOS, PATH_USERS } from '@/lib/constants';
 
 export async function POST(request: Request) {
     try {
@@ -14,7 +15,7 @@ export async function POST(request: Request) {
         }
 
         // 2. Verificar que el conjunto residencial existe
-        const conjuntoRef = doc(db, 'conjuntos', conjuntoId);
+        const conjuntoRef = doc(db, PATH_CONJUNTOS, conjuntoId);
         const conjuntoSnap = await getDoc(conjuntoRef);
         if (!conjuntoSnap.exists()) {
             return NextResponse.json({ error: "El conjunto residencial no existe" }, { status: 404 });
@@ -37,11 +38,11 @@ export async function POST(request: Request) {
         };
 
         // Usar el UID de la autenticación como ID del documento en Firestore
-        const userDocRef = doc(db, 'usuarios', user.uid);
+        const userDocRef = doc(db, PATH_USERS, user.uid);
         await setDoc(userDocRef, { ...residenteData, id: user.uid });
 
-        // Anidar también una referencia o los datos del usuario dentro del conjunto puede ser útil para listados, pero la fuente de verdad estará en /usuarios
-        const userInConjuntoRef = doc(db, `conjuntos/${conjuntoId}/usuarios`, user.uid);
+        // Anidar también una referencia o los datos del usuario dentro del conjunto puede ser útil para listados, pero la fuerte de verdad estará en /usuarios
+        const userInConjuntoRef = doc(db, `${PATH_CONJUNTOS}/${conjuntoId}/usuarios`, user.uid);
         await setDoc(userInConjuntoRef, { nombre: residenteData.nombre, email: residenteData.email, rol: residenteData.rol });
 
 
